@@ -1,5 +1,8 @@
+# Notice
+这本书就按照大意读吧(关注你需要的部分)，以为书里边感觉有很多细节上的错误，实例代码也是。
+
 # Go-Building-Web-Applications
-Go-Building-Web-Applications by Packt Publishing
+Go-Building-Web-Applications by Packt Publishing, 
 
 ##What You Will Learn:
 *	Build a fully-featured REST API to enable client-side single page apps

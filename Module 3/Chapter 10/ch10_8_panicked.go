@@ -9,6 +9,7 @@ const TOTAL_RANDOMS = 100
 
 func sendRandoms(ch chan int) {
 	for i := 0; i < TOTAL_RANDOMS; i++ {
+		// the channel closed at 98, cause panic
 		ch <- i
 	}
 }

@@ -33,14 +33,14 @@ func (s *Server) serverListen(sc chan bool) {
 		select {
 		case msg := <-s.Recheck:
 			var statusText string
-			if msg == false {
+			if msg == false { // if this time, service failed, retry after timeout
 				statusText = "NOT in service"
 				s.Failures++
 				s.Timeout = s.Timeout + TIMEOUT_INCREMENT
 				if s.Timeout > MAX_TIMEOUT_SECONDS {
 					s.Timeout = MAX_TIMEOUT_SECONDS
 				}
-			} else {
+			} else { // if anytime, service success, reset status, retry after default timeout
 				if ServersAvailable == false {
 					ServersAvailable = true
 					sc <- true
@@ -50,6 +50,7 @@ func (s *Server) serverListen(sc chan bool) {
 			}
 
 			if s.Failures >= MAX_SERVER_FAILURES {
+				// here, it should break the loop & stop the check.
 				s.InService = false
 				fmt.Println("\tServer", s.Name, "failed too many times.")
 			} else {
@@ -63,7 +64,7 @@ func (s *Server) serverListen(sc chan bool) {
 		}
 	}
 }
-
+// check status, send result to s.Recheck channel
 func (s *Server) checkStatus() {
 	previousStatus := "Unknown"
 	if s.Status == true {
@@ -111,7 +112,7 @@ func roundRobin() Server {
 			for i := range Servers {
 				if Servers[i].InService == true {
 					AvailableServer = Servers[i]
-					serverReady = true
+					serverReady = true // break outer loop
 				}
 			}
 
@@ -150,14 +151,16 @@ func setProxy() *httputil.ReverseProxy {
 }
 
 func startListening() {
-	http.HandleFunc("/index.html", handler(Proxy))
+	// 这个地方，handler方法里边的 setProxy 只会在这里执行一遍, 函数调用，
+	// 然后返回了内部的 closure， 所以这个round robin的反向代理根本没有用好么
+	http.HandleFunc("/index.html", handler(Proxy)) 
 	_ = http.ListenAndServe(":8080", nil)
 
 }
 
 func main() {
 	nextServerIndex = 0
-	ServersAvailable = false
+	ServersAvailable = false // 这个地方唯一设置成false就这里了，所以下面的 ServerChan 就只会执行一遍
 	ServerChan := make(chan bool)
 	done := make(chan bool)
 
@@ -168,7 +171,7 @@ func main() {
 
 	for {
 		select {
-		case <-ServerChan:
+		case <-ServerChan: // ServerChan 就只会执行一遍
 			Proxy = setProxy()
 			startListening()
 			return

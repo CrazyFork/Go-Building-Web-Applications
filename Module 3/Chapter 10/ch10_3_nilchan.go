@@ -1,9 +1,4 @@
 package main
-
-import (
-	"fmt"
-)
-
 func main() {
 
 	var channel chan int
